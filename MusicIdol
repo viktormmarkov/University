@@ -1,0 +1,499 @@
+#include<iostream>
+#include<cstring>
+#include<cmath>
+
+using namespace std;
+
+#pragma region Song
+class Song
+{
+private:
+  char* name;
+	int duration;
+	int rating;
+public:
+	Song();
+	Song(char[], int, int);
+	~Song();
+	Song& operator =(const Song&);
+	const char* GetName() const;
+	const int GetDuration() const;
+	const int GetRating() const;
+	void FixName();
+	void SetName(char*);
+	void SetDuration(int);
+	void SetRating(int);
+	void Print();
+	bool isHit();
+	int GetDurationInMinutes();
+
+};
+Song::Song()
+{
+	name = new char[10];
+	strcpy(name,"Undefined");
+	duration = 0;
+	rating = 0;
+}
+Song::Song(char* _name, int _rating, int _duration)
+{
+	name = new char[strlen(_name)-1];
+	strcpy(name, _name);
+	rating = _rating;
+	duration = _duration;
+}
+Song::~Song()
+{
+	delete []name;
+}
+Song& Song:: operator= (const Song& newSong)
+{
+	name = new char[strlen(newSong.GetName())+1];
+	strcpy(name,newSong.GetName());
+	duration = newSong.GetDuration();
+	rating = newSong.GetRating();
+	return *this;
+}
+void Song::SetName(char* _name)
+{
+	//delete []name;
+	name = new char[strlen(_name) - 1];
+	strcpy(name,_name);
+}
+void Song::SetDuration(int _duration)
+{
+	duration = _duration;
+}
+void Song::SetRating(int _rating)
+{
+	rating = _rating;
+}
+const char* Song::GetName() const
+{
+	return name;
+}
+const int Song::GetDuration() const
+{
+	return duration;
+}
+const int Song::GetRating() const
+{
+	return rating;
+}
+void Song::Print()
+{
+	cout<<"Name:  "<< name<<endl;
+	cout<<"Duration: "<<duration<<endl;
+	cout<<"Rating: "<<rating<<endl;	
+}
+bool Song::isHit()
+{
+	if(GetRating() >= 7)
+		return true;
+	else 
+		return false;
+}
+void Song::FixName()
+{
+	if(name[0]>='a'  && name[0]<='z')
+	{
+		name[0] = name[0] + 32;
+	}
+	for(int i = 0 ; i < strlen(name); i++)
+	{
+		if(name[i] == '_')
+		{
+			name[i] = ' ';
+		}
+	}
+}
+int Song::GetDurationInMinutes()
+{
+	int myduration = GetDuration()/60;
+	if(GetDuration()%60<=29 && GetDuration()%60>=0)
+	{
+		return myduration;
+	}
+	else
+	{
+		return myduration+1;
+	}
+}
+#pragma endregion
+
+Song EnterSong()
+{
+	char* name = new char[];
+	cout<<"Name ";
+	cin>>name;
+	int rating,duration;
+	cout<<"Rating ";
+	cin>>rating;
+	cout<<"Duration ";
+	cin>>duration;
+	Song song(name,duration,rating);
+	return song;
+}
+
+#pragma region Playlist
+class Playlist
+{
+protected:
+	Song *SongList;
+	int numberOfSongs;
+public:
+	Playlist();
+	Playlist(Song*);
+	Playlist(const Playlist&);
+	Song operator[](int);
+	void AddSong(Song);
+	void RemoveSongLowestRating();
+	void RemoveSongAt(int k);
+	void PrintSongs();
+	void SortSongs();
+};
+Playlist::Playlist()
+{
+	cout<<"Enter the number of songs must be below 20 ";
+	cin>>numberOfSongs;
+	if(numberOfSongs>20)
+	{
+		cout<<"The number of songs must be below 20";
+		return ;
+	}
+	SongList = new Song[numberOfSongs];
+	for(int i = 0; i<numberOfSongs; i++)
+	{
+		SongList[i] = EnterSong();
+		SongList[i].FixName();
+	}
+}
+Playlist::Playlist(Song* _songlist)
+{
+	numberOfSongs = sizeof(*_songlist)/sizeof(_songlist);
+	if(numberOfSongs > 20)
+	{
+		cout<<"The number of song must be lesser or equal to 20"<<endl;
+		return;
+	}
+	SongList = new Song[numberOfSongs];
+	for(int i = 0 ; i<numberOfSongs; i++)
+	{
+		SongList[i] = _songlist[i];
+	}
+}
+Playlist::Playlist(const Playlist& list)
+{
+	for(int i = 0; i<list.numberOfSongs; i++)
+	{
+		SongList[i] = list.SongList[i];
+	}
+}
+Song Playlist :: operator[](int k)
+{
+	return SongList[k];
+}
+void Playlist::AddSong(Song song)
+{
+	if(numberOfSongs>=20)
+	{
+		cout<<"You canot add anymore songs";
+		return;
+	}
+	Song* newList = new Song[numberOfSongs+1];
+	for(int i = 0; i<numberOfSongs; i++)
+	{
+		newList[i] = SongList[i];
+	}
+	newList[numberOfSongs] = song;
+	SongList = new Song[numberOfSongs + 1];
+	for(int i = 0; i<=numberOfSongs; i++)
+	{
+		SongList[i] = newList[i];
+	}
+	numberOfSongs+=1;
+}
+void Playlist::RemoveSongAt(int k)
+{
+	Song* newList = new Song[numberOfSongs-1];
+	for(int i = 0,j = 0; i<numberOfSongs; i++)
+	{
+		if(k!=i)
+		{
+			newList[j] = SongList[i];
+			j++;
+		}
+	}
+	SongList = new Song[numberOfSongs-1];
+	for(int i = 0 ; i<numberOfSongs-1; i++)
+	{
+		SongList[i] = newList[i];
+	}
+	--numberOfSongs;
+}
+void Playlist::RemoveSongLowestRating()
+{
+	int min = 0 ;
+	for(int i = 0 ; i<numberOfSongs; i++)
+	{
+		if(SongList[i].GetRating() < SongList[min].GetRating())
+		{
+			min = i;
+		}
+	}
+	RemoveSongAt(min);
+}
+void Playlist::SortSongs()
+{
+	bool flag = true;
+	Song temp;
+	for(int i = 1; i<numberOfSongs && flag; i++)
+	{
+		flag = false;
+		for (int j = 0 ; j<numberOfSongs-1; j++)
+		{
+			if(strcmp(SongList[j+1].GetName(),SongList[j].GetName())<0)
+			{
+				temp = SongList[j];
+				SongList[j] = SongList[j+1];
+				SongList[j+1] = temp;
+				flag = true;
+			}
+		}
+	}
+}
+void Playlist::PrintSongs()
+{
+	cout<<"***********SONGS************"<<endl;
+	for(int i = 0 ; i < numberOfSongs ; i++)
+	{
+		SongList[i].Print();
+	}
+	cout<<"****************************"<<endl;
+}
+#pragma endregion 
+
+#pragma region Album
+class Album: public Playlist
+{
+private:
+	char* name;
+	int salesCount;
+	int year;
+public:
+	Album()
+	{
+		SongList = new Song[1];
+		Song song;
+		SongList[0] = song;
+		name = new char[9];
+		strcpy(name,"undefined");
+		salesCount = 0;
+		year = 1990;
+	};
+	Album(char* _name, int _sales, int _year):Playlist()
+	{
+		name = new char[strlen(_name)+1];
+		strcpy(name,_name);
+		salesCount=_sales;
+		year = _year;
+	};
+	Album(char* _name, Song* songs,int _sales ,int _year):Playlist(songs)
+	{
+		name = new char[strlen(_name)+1];
+		strcpy(name,_name);
+		salesCount=_sales;
+		year = _year;
+	};
+	//~Album(); 
+	Album& operator = (const Album&);
+	const char* GetName()const;
+	const int GetSales()const;
+	const int GetYear()const;
+	void SetSales(int);
+	const bool isStar()const;
+	int GetTotalDuration()const;
+	void SortViaDuration();
+	char* TypeOfAlbum();
+	const bool SearchSong(const Song) const;
+	const int GetNumberOfSongs();
+	void PrintInfo();
+};
+Album& Album::operator=(const Album& _album)
+{
+	if(this==&_album)
+		return *this;
+	name = new char[strlen(_album.GetName()+1)];
+	strcpy(name,_album.GetName());
+	salesCount = _album.GetSales();
+	year = _album.GetYear();
+	for(int i = 0; i<numberOfSongs; i++)
+	{
+		SongList[i] = _album.SongList[i];
+	}
+	
+}
+const char* Album::GetName() const
+{
+	return name;
+}
+const int Album::GetSales() const
+{
+	return salesCount;
+}
+const int Album::GetYear() const
+{
+	return year;
+}
+void Album::SetSales(int _sales)
+{
+	salesCount = _sales;
+}
+const bool Album::isStar() const
+{
+	bool flag=true;
+	int count=0;
+	if ( GetSales() > 50000)
+	{
+		for(int i = 0 ; i <numberOfSongs; i++)
+		{
+			if(SongList[i].isHit())
+			{
+				count++;
+			}
+		}
+		if(count<numberOfSongs/2)
+		{
+			flag = false;
+		}
+	}
+	return flag;
+}
+int Album::GetTotalDuration() const
+{
+	int Duration = 0;
+	for (int i = 0 ; i < numberOfSongs; i++)
+	{
+		Duration += SongList[i].GetDurationInMinutes();
+	}
+	return Duration;
+}
+void Album::SortViaDuration()
+{
+	for (int i = 0 ; i < numberOfSongs-1; i++)
+	{
+		int min = i;
+		for (int j = i+1; j<numberOfSongs; j++)
+		{
+			if(SongList[j].GetDuration()<SongList[min].GetDuration())
+			{
+				min = j;
+			}
+		}
+		swap(SongList[i],SongList[min]);
+	}
+}
+char* Album::TypeOfAlbum()
+{
+	if(GetSales()<50000)
+		return "Ordinary";
+	else if(GetSales()>=200000)
+		return "Diamond";
+	else if(GetSales()>=100000)
+		return "Platinum";
+	else if(GetSales()>=50000)
+		return "Golden";
+}
+const bool Album::SearchSong(const Song _song) const
+{
+	for(int i = 0 ; i<numberOfSongs; i++)
+	{
+		if(SongList[i].GetDuration() == _song.GetDuration() && 
+			SongList[i].GetRating() == _song.GetRating() &&
+			(strcmp(SongList[i].GetName(), _song.GetName()))==0)
+			return true;
+	}
+	return false;
+}
+const int Album::GetNumberOfSongs()
+{
+	return numberOfSongs;
+}
+void Album::PrintInfo()
+{
+	cout<<"----------- ALBUM ------------"<<endl;
+	cout<<"Name of album: "<<GetName()<<endl;
+	cout<<"Year produced: "<<GetYear()<<endl;
+	cout<<"Number of Sales: "<<GetSales()<<endl;
+	PrintSongs();
+	cout<<"------------------------------"<<endl;
+}
+#pragma endregion
+
+#pragma region Artist
+class Artist
+{
+private:
+	char* name;
+	int numberOfAlbums;
+	Album* albums;
+public:
+	Artist();
+	Artist(char*, Album albums[]);
+	int GetNumberOfAlbums();
+	Song GetBestHit();
+	void PrintArtistInfo();
+};
+Artist::Artist()
+{
+	name = new char[10];
+	strcpy(name,"Undefined");
+	numberOfAlbums = 0;
+}
+Artist::Artist(char* _name, Album _albums[])
+{
+	name = new char[strlen(_name)+1];
+	strcpy(name, _name);
+	numberOfAlbums = 1;
+	for(int i = 0; i<numberOfAlbums; i++)
+	{
+		albums[i] = _albums[i];
+	}
+}
+void Artist::PrintArtistInfo()
+{
+	cout<<"Name of Artist: "<<name<<endl;
+	cout<<"Number of albums: "<<numberOfAlbums<<endl;
+	cout<<"<<<<<<<<<<<< ALBUMS >>>>>>>>>>>>>"<<endl;
+	for(int i = 0; i<numberOfAlbums; i++)
+	{
+		albums[i].PrintInfo();
+	}
+	cout<<"<<<<<<<<<<<<<<<<>>>>>>>>>>>>>>>>>"<<endl;
+}
+#pragma endregion 
+
+int main()
+{
+
+	
+	Song newSong("My Song", 9, 231),mySong("Your Song", 8 , 180),yourSong("His Song",7,135), herSong("Her Song",8,431);
+	Song songs[3] = {newSong, mySong,yourSong};
+	//Playlist songlist(songs);
+	Album yourAlbum("My Album",songs,200000, 2010);
+	Album albums[2] = { yourAlbum,yourAlbum};
+	Artist myArtist;
+	myArtist.PrintArtistInfo();
+	//myArtist.PrintArtistInfo();
+	//Album myAlmbum("Halo",songs, 200000, 2010);
+	//cout<<myAlmbum.TypeOfAlbum();
+	//Playlist myPlaylist;
+	//Song newSong("Hello", 8, 343);
+	//myPlaylist.AddSong(newSong);
+	////myPlaylist.RemoveSongLowestRating();
+	////myPlaylist.RemoveSongAt(2);
+	//myPlaylist.SortSongs();
+	//myPlaylist.PrintSongs();
+	//Album myAlbum;
+	return 0;
+}
